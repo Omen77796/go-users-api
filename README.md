@@ -74,6 +74,78 @@ POST /users
 
 ---
 
+## API Usage Examples
+
+### Health Check
+
+Request
+
+curl http://localhost:8080/health
+
+Response
+
+{
+"status": "ok"
+}
+
+---
+
+### Get All Users
+
+Request
+
+curl http://localhost:8080/users
+
+Example Response
+
+[
+{
+"id": 1,
+"name": "Joseph",
+"email": "[joseph@email.com](mailto:joseph@email.com)"
+}
+]
+
+---
+
+### Get User by ID
+
+Request
+
+curl http://localhost:8080/users/1
+
+Example Response
+
+{
+"id": 1,
+"name": "Joseph",
+"email": "[joseph@email.com](mailto:joseph@email.com)"
+}
+
+---
+
+### Create User
+
+Request
+
+curl -X POST http://localhost:8080/users 
+-H "Content-Type: application/json" 
+-d '{
+"name": "Joseph",
+"email": "[joseph@email.com](mailto:joseph@email.com)"
+}'
+
+Example Response
+
+{
+"id": 2,
+"name": "Joseph",
+"email": "[joseph@email.com](mailto:joseph@email.com)"
+}
+
+
+---
+
 ## Example Request
 
 POST /users
