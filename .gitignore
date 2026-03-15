@@ -1,0 +1,14 @@
+# binaries
+main
+*.exe
+
+# Go
+bin/
+pkg/
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
