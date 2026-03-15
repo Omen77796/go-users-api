@@ -23,6 +23,17 @@ Client → Go API → Redis Cache → PostgreSQL Database
 
 ---
 
+## mermaid
+graph TD
+
+Client --> API[Go API - Chi Router]
+
+API --> Redis[(Redis Cache)]
+
+API --> Postgres[(PostgreSQL Database)]
+
+---
+
 ## Run the Project
 
 Clone the repository:
