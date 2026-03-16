@@ -101,8 +101,8 @@ Example Response
 [
 {
 "id": 1,
-"name": "Joseph",
-"email": "[joseph@email.com](mailto:joseph@email.com)"
+"name": "Omen77796",
+"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
 }
 ]
 
@@ -118,8 +118,8 @@ Example Response
 
 {
 "id": 1,
-"name": "Joseph",
-"email": "[joseph@email.com](mailto:joseph@email.com)"
+"name": "Omen77796",
+"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
 }
 
 ---
@@ -131,16 +131,16 @@ Request
 curl -X POST http://localhost:8080/users 
 -H "Content-Type: application/json" 
 -d '{
-"name": "Joseph",
-"email": "[joseph@email.com](mailto:joseph@email.com)"
+"name": "Omen77796",
+"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
 }'
 
 Example Response
 
 {
 "id": 2,
-"name": "Joseph",
-"email": "[joseph@email.com](mailto:joseph@email.com)"
+"name": "Omen77796",
+"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
 }
 
 
@@ -151,8 +151,8 @@ Example Response
 POST /users
 
 {
-"name": "Joseph",
-"email": "[joseph@email.com](mailto:joseph@email.com)"
+"name": "Omen77796",
+"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
 }
 
 ---
@@ -178,4 +178,4 @@ Database initialization script
 
 ## Author
 
-Joseph Rodriguez
+Omen77796 Rodriguez

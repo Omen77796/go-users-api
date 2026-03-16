@@ -10,6 +10,7 @@ import (
 
 	"go-users-api/internal/models"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -92,7 +93,20 @@ func handleGetUsers(w http.ResponseWriter, db *sql.DB, rdb *redis.Client) {
 		users = append(users, u)
 	}
 
-	func GetUserByIDHandler(db *sql.DB) http.HandlerFunc {
+	jsonData, err := json.Marshal(users)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rdb.Set(ctx, "users", jsonData, 30*time.Second)
+
+	log.Println("Datos obtenidos desde PostgreSQL 🐘")
+
+	w.Write(jsonData)
+}
+
+func GetUserByIDHandler(db *sql.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -119,17 +133,4 @@ func handleGetUsers(w http.ResponseWriter, db *sql.DB, rdb *redis.Client) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(user)
 	}
-}
-
-	jsonData, err := json.Marshal(users)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	rdb.Set(ctx, "users", jsonData, 30*time.Second)
-
-	log.Println("Datos obtenidos desde PostgreSQL 🐘")
-
-	w.Write(jsonData)
 }

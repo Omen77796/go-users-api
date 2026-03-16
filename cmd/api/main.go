@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"go-users-api/internal/handlers"
 	"go-users-api/internal/middleware"
 
+	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 )
@@ -20,7 +22,12 @@ var ctx = context.Background()
 
 func main() {
 
-	connStr := "host=postgres user=postgres password=postgres2026 dbname=usersdb sslmode=disable"
+	connStr := "host=" + os.Getenv("POSTGRES_HOST") +
+		" user=" + os.Getenv("POSTGRES_USER") +
+		" password=" + os.Getenv("POSTGRES_PASSWORD") +
+		" dbname=" + os.Getenv("POSTGRES_DB") +
+		" port=" + os.Getenv("POSTGRES_PORT") +
+		" sslmode=disable"
 
 	var err error
 	db, err = sql.Open("postgres", connStr)
@@ -45,7 +52,7 @@ func main() {
 	log.Println("Conectado a PostgreSQL 🚀")
 
 	rdb = redis.NewClient(&redis.Options{
-		Addr: "redis:6379",
+		Addr: os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
 	})
 
 	err = rdb.Ping(ctx).Err()
@@ -64,9 +71,9 @@ func main() {
 	r.Method("GET", "/users", handlers.UsersHandler(db, rdb))
 	r.Method("POST", "/users", handlers.UsersHandler(db, rdb))
 
-	log.Println("Servidor corriendo en puerto 8080 🚀")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	port := os.Getenv("SERVER_PORT")
 
-	log.Println("Servidor corriendo en puerto 8080 🚀")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Servidor corriendo en puerto", port, "🚀")
+	log.Fatal(http.ListenAndServe(":"+port, r))
+
 }
