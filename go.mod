@@ -1,4 +1,4 @@
-module go-users-api
+module github.com/omen77796/go-users-api
 
 go 1.25.0
 

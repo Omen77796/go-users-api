@@ -8,8 +8,9 @@ import (
 	"os"
 	"time"
 
-	"go-users-api/internal/handlers"
-	"go-users-api/internal/middleware"
+	"github.com/omen77796/go-users-api/internal/middleware"
+
+	"github.com/omen77796/go-users-api/internal/handlers"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"

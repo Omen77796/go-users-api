@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"go-users-api/internal/models"
+	"github.com/omen77796/go-users-api/internal/models"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
