@@ -176,6 +176,6 @@ Database initialization script
 
 ---
 
-## Author
+## Maintainer
 
-Omen77796 Rodriguez
+Omen77796 
