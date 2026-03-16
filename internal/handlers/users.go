@@ -66,10 +66,13 @@ func handleGetUsers(w http.ResponseWriter, db *sql.DB, rdb *redis.Client) {
 	cached, err := rdb.Get(ctx, "users").Result()
 
 	if err == nil {
+		log.Println("CACHE HIT → Redis ⚡")
+
 		w.Write([]byte(cached))
-		log.Println("Datos obtenidos desde Redis ⚡")
 		return
 	}
+
+	log.Println("CACHE MISS → consultando PostgreSQL 🐘")
 
 	rows, err := db.Query("SELECT id, name, email FROM users")
 	if err != nil {
@@ -101,7 +104,7 @@ func handleGetUsers(w http.ResponseWriter, db *sql.DB, rdb *redis.Client) {
 
 	rdb.Set(ctx, "users", jsonData, 30*time.Second)
 
-	log.Println("Datos obtenidos desde PostgreSQL 🐘")
+	log.Println("Datos obtenidos desde PostgreSQL 🐘 (guardando en Redis)")
 
 	w.Write(jsonData)
 }
@@ -132,5 +135,41 @@ func GetUserByIDHandler(db *sql.DB) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(user)
+	}
+}
+
+func DeleteUserHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		id := chi.URLParam(r, "id")
+
+		result, err := db.Exec(
+			"DELETE FROM users WHERE id = $1",
+			id,
+		)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if rowsAffected == 0 {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		// limpiar cache
+		rdb.Del(ctx, "users")
+
+		log.Println("Usuario eliminado 🗑️ y cache invalidado")
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }

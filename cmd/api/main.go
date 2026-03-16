@@ -12,6 +12,9 @@ import (
 
 	"github.com/omen77796/go-users-api/internal/handlers"
 
+	_ "github.com/omen77796/go-users-api/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -69,8 +72,10 @@ func main() {
 
 	r.Get("/health", handlers.HealthHandler)
 	r.Get("/users/{id}", handlers.GetUserByIDHandler(db))
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 	r.Method("GET", "/users", handlers.UsersHandler(db, rdb))
 	r.Method("POST", "/users", handlers.UsersHandler(db, rdb))
+	r.Delete("/users/{id}", handlers.DeleteUserHandler(db, rdb))
 
 	port := os.Getenv("SERVER_PORT")
 
