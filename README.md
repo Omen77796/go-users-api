@@ -34,6 +34,20 @@ API --> Postgres[(PostgreSQL Database)]
 
 ---
 
+## Environment Variables
+
+1. Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+2. Adjust values as needed for your local setup.
+
+> `.env` is intentionally ignored by git to avoid committing secrets.
+
+---
+
 ## Run the Project
 
 Clone the repository:
