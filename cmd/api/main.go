@@ -3,16 +3,19 @@ package main
 import (
 	"context"
 	"database/sql"
-	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 
+	"github.com/omen77796/go-users-api/internal/config"
 	"github.com/omen77796/go-users-api/internal/handlers"
+	"github.com/omen77796/go-users-api/internal/logger"
 	"github.com/omen77796/go-users-api/internal/middleware"
 	"github.com/omen77796/go-users-api/internal/repository"
 	"github.com/omen77796/go-users-api/internal/services"
@@ -21,21 +24,26 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-var ctx = context.Background()
-
 func main() {
+
+	// 🔥 CARGAR CONFIG PRIMERO
+	cfg := config.Load()
+
+	// 🔥 LOGGER
+	logger.Init()
+	defer logger.Log.Sync()
 
 	// ================================
 	// 🔹 PostgreSQL
 	// ================================
-	dbURL := os.Getenv("DATABASE_URL")
+	dbURL := cfg.DBUrl
 	if dbURL == "" {
-		log.Fatal("DATABASE_URL no está definida")
+		logger.Log.Fatal("DATABASE_URL no está definida")
 	}
 
-	db, err := sql.Open("postgres", dbURL)
+	db, err := sql.Open("postgres", cfg.DBUrl)
 	if err != nil {
-		log.Fatal(err)
+		logger.Log.Fatal("failed to open database", zap.Error(err))
 	}
 	defer db.Close()
 
@@ -43,15 +51,15 @@ func main() {
 		if err = db.Ping(); err == nil {
 			break
 		}
-		log.Println("Esperando PostgreSQL...")
+		logger.Log.Warn("waiting for PostgreSQL...")
 		time.Sleep(2 * time.Second)
 	}
 
 	if err != nil {
-		log.Fatal("No se pudo conectar a PostgreSQL:", err)
+		logger.Log.Fatal("PostgreSQL connection failed", zap.Error(err))
 	}
 
-	log.Println("Conectado a PostgreSQL 🚀")
+	logger.Log.Info("PostgreSQL connected")
 
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
@@ -61,24 +69,24 @@ func main() {
 	// 🔹 Redis
 	// ================================
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADDR"),
-		Password: os.Getenv("REDIS_PASSWORD"),
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPassword,
 		DB:       0,
 	})
 
 	for i := 0; i < 10; i++ {
-		if err = rdb.Ping(ctx).Err(); err == nil {
+		if err = rdb.Ping(context.Background()).Err(); err == nil {
 			break
 		}
-		log.Println("Esperando Redis...")
+		logger.Log.Warn("waiting for Redis")
 		time.Sleep(2 * time.Second)
 	}
 
 	if err != nil {
-		log.Fatal("No se pudo conectar a Redis:", err)
+		logger.Log.Fatal("Redis connection failed", zap.Error(err))
 	}
 
-	log.Println("Conectado a Redis 🚀")
+	logger.Log.Info("Redis connected")
 
 	// ================================
 	// 🔥 AQUI VA TU NUEVA ARQUITECTURA
@@ -91,7 +99,9 @@ func main() {
 	// 🔹 Router
 	// ================================
 	r := chi.NewRouter()
-	r.Use(middleware.Recoverer)
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Recovery)
 	r.Use(middleware.Logger)
 
 	r.Get("/health", handlers.HealthHandler)
@@ -106,11 +116,40 @@ func main() {
 	// ================================
 	// 🔹 Server
 	// ================================
-	port := os.Getenv("SERVER_PORT")
+	port := cfg.Port
 	if port == "" {
 		port = "8080"
 	}
 
-	log.Println("Servidor corriendo en puerto", port, "🚀")
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	srv := &http.Server{
+		Addr:         ":" + port,
+		Handler:      r,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
+	}
+
+	// correr servidor en goroutine
+	go func() {
+		logger.Log.Info("server started", zap.String("port", port))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Log.Fatal("fatal error", zap.Error(err))
+		}
+	}()
+
+	// graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+
+	<-quit
+	logger.Log.Info("Shutting down server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Log.Fatal("error shutting down server", zap.Error(err))
+	}
+
+	logger.Log.Info("Server stopped")
 }

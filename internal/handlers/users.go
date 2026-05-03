@@ -11,9 +11,11 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/omen77796/go-users-api/internal/logger"
 	"github.com/omen77796/go-users-api/internal/models"
 	"github.com/omen77796/go-users-api/internal/services"
 	"github.com/omen77796/go-users-api/internal/utils"
+	"go.uber.org/zap"
 )
 
 type UserHandler struct {
@@ -27,7 +29,8 @@ func NewUserHandler(s *services.UserService) *UserHandler {
 func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.service.GetAll()
 	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, "error getting users")
+		logger.Log.Error("failed to get users", zap.Error(err))
+		utils.JSONError(w, http.StatusInternalServerError, "error getting users")
 		return
 	}
 
@@ -37,13 +40,15 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	u, err := decodeAndValidateUser(r)
 	if err != nil {
-		utils.Error(w, http.StatusBadRequest, err.Error())
+		logger.Log.Error("failed to create user", zap.Error(err))
+		utils.JSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.service.Create(&u)
 	if err != nil {
-		utils.Error(w, http.StatusInternalServerError, err.Error())
+		logger.Log.Info("user created", zap.String("email", u.Email))
+		utils.JSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -86,13 +91,16 @@ func decodeAndValidateUser(r *http.Request) (models.User, error) {
 func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUserID(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		logger.Log.Warn("invalid user id", zap.Error(err))
+		utils.JSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	user, err := h.service.GetByID(id)
 	if err != nil {
-		utils.Error(w, http.StatusNotFound, "user not found")
+		logger.Log.Warn("user not found", zap.Int("id", id), zap.Error(err))
+
+		utils.JSONError(w, http.StatusNotFound, "user not found")
 		return
 	}
 
@@ -102,17 +110,19 @@ func (h *UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	id, err := parseUserID(chi.URLParam(r, "id"))
 	if err != nil {
-		utils.Error(w, http.StatusBadRequest, err.Error())
+		utils.JSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	err = h.service.Delete(id)
 	if err != nil {
-		utils.Error(w, http.StatusNotFound, "user not found")
+		logger.Log.Warn("failed to delete user", zap.Int("id", id), zap.Error(err))
+
+		utils.JSONError(w, http.StatusNotFound, "user not found")
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	logger.Log.Info("user deleted", zap.Int("id", id))
 }
 
 func parseUserID(rawID string) (int, error) {

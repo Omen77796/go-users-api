@@ -20,17 +20,7 @@ func JSON(w http.ResponseWriter, status int, data interface{}) {
 	})
 }
 
-func Error(w http.ResponseWriter, status int, err string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	json.NewEncoder(w).Encode(APIResponse{
-		Data:  nil,
-		Error: err,
-	})
-}
-
-func Error(w http.ResponseWriter, status int, message string) {
+func JSONError(w http.ResponseWriter, status int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 

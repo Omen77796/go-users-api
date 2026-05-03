@@ -1,5 +1,5 @@
 # Imagen base oficial de Go
-FROM golang:1.25
+FROM golang:1.26-alpine
 
 # Carpeta de trabajo dentro del contenedor
 WORKDIR /app

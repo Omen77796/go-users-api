@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/mail"
 	"strings"
 	"time"
 
+	"github.com/omen77796/go-users-api/internal/logger"
 	"github.com/omen77796/go-users-api/internal/models"
 	"github.com/omen77796/go-users-api/internal/repository"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 type UserService struct {
@@ -65,16 +66,17 @@ func (s *UserService) GetAll() ([]models.User, error) {
 	if err == nil {
 		var users []models.User
 		if err := json.Unmarshal([]byte(cached), &users); err == nil {
-			log.Println("CACHE HIT ⚡")
+			logger.Log.Info("cache hit: users")
 			return users, nil
 		}
-		log.Println("Error parseando cache, fallback a DB")
+		logger.Log.Warn("failed to unmarshal cache, fallback to DB", zap.Error(err))
 	}
 
 	// 🔥 2. DB fallback
-	log.Println("CACHE MISS 🐘 → consultando DB")
+	logger.Log.Info("cache miss: querying database")
 	users, err := s.repo.GetAll()
 	if err != nil {
+		logger.Log.Error("failed to get users from repository", zap.Error(err))
 		return nil, err
 	}
 
@@ -82,6 +84,8 @@ func (s *UserService) GetAll() ([]models.User, error) {
 	jsonData, err := json.Marshal(users)
 	if err == nil {
 		s.rdb.Set(ctx, "users", jsonData, time.Minute)
+	} else {
+		logger.Log.Warn("failed to marshal users for cache", zap.Error(err))
 	}
 
 	return users, nil

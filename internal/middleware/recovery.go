@@ -1,18 +1,19 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 
+	"github.com/omen77796/go-users-api/internal/logger"
 	"github.com/omen77796/go-users-api/internal/utils"
+	"go.uber.org/zap"
 )
 
-func Recoverer(next http.Handler) http.Handler {
+func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Println("PANIC RECOVERED:", err)
-				utils.Error(w, http.StatusInternalServerError, "internal server error")
+				logger.Log.Error("panic recovered", zap.Any("error", err))
+				utils.JSONError(w, http.StatusInternalServerError, "internal server error")
 			}
 		}()
 
