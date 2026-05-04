@@ -17,6 +17,18 @@ This project demonstrates how to build a scalable backend with caching, proper s
 
 ---
 
+## Features
+
+- Layered architecture (Handler / Service / Repository)
+- Redis caching for performance optimization
+- PostgreSQL as primary database
+- Graceful shutdown
+- Middleware (logging & recovery)
+- Swagger API documentation
+- Dockerized environment
+
+---
+
 ## Architecture
 
 The project follows a layered architecture:
@@ -76,10 +88,12 @@ http://localhost:8080
 
 ---
 
-**API Documentation (Swagger)**
+## API Documentation (Swagger)
+
 http://localhost:8080/swagger/index.html
 
 ---
+
 ## 🔌 API Endpoints
 
 ### Health
@@ -101,13 +115,17 @@ http://localhost:8080/swagger/index.html
 
 Request
 
+```bash
 curl http://localhost:8080/health
+```
 
 Response
 
+```json
 {
-"status": "ok"
+  "status": "ok"
 }
+```
 
 ---
 
@@ -115,7 +133,9 @@ Response
 
 Request
 
+```bash
 curl http://localhost:8080/users
+```
 
 Example response:
 
@@ -133,7 +153,9 @@ Example response:
 
 Request
 
+```bash
 curl http://localhost:8080/users/1
+```
 
 Example response:
 
@@ -149,12 +171,14 @@ Example response:
 
 Request
 
+```bash
 curl -X POST http://localhost:8080/users \
 -H "Content-Type: application/json" \
 -d '{
   "name": "John",
   "email": "john@email.com"
 }'
+```
 
 Example response:
 
