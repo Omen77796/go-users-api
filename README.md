@@ -33,42 +33,42 @@ The project follows a layered architecture:
 
 ## Architecture Diagram
 
-graph TD 
+```mermaid
+graph TD
 
 Client --> Handler
 
-subgraph Application 
-Handler --> Service 
-Service --> Repository end
+subgraph Application
+Handler --> Service
+Service --> Repository
+end
 
-Repository --> Postgres[(PostgreSQL)] 
+Repository --> Postgres[(PostgreSQL)]
 Service --> Redis[(Redis Cache)]
-
+```
 ---
 
 ## Environment Variables
 
 Create a .env file:
 
+```env
 DATABASE_URL=postgres://user:password@db:5432/users?sslmode=disable
 REDIS_ADDR=redis:6379
 REDIS_PASSWORD=
 PORT=8080
+```
 ---
 
 ## Run the Project with Docker
 
 Clone the repository:
 
+```bash
 git clone https://github.com/Omen77796/go-users-api.git
-
-Enter the project directory:
-
 cd go-users-api
-
-Start all services with Docker:
-
 docker compose up --build
+```
 
 The API will run at:
 
@@ -88,10 +88,10 @@ http://localhost:8080/swagger/index.html
 
 ### Users
 
-- **GET/users → Get all users**
-- **GET/users/{id} → Get user by ID**
-- **POST/users → Create a new user**
-- **DELETE/users/{id} → Delete a user**
+- **GET /users** → Get all users
+- **GET /users/{id}** → Get user by ID
+- **POST /users** → Create a new user
+- **DELETE /users/{id}** → Delete a user
  
 ---
 
@@ -167,19 +167,27 @@ Example response:
 ---
 
 ## Delete User
+
+```bash
 curl -X DELETE http://localhost:8080/users/1
+```
 ---
 
 ## Project Structure
 
-cmd/api     # Application entry point 
+```text
+cmd/api              # Application entry point
 
-internal/ handlers/ # HTTP handlers 
-services/ # Business logic 
-repository/ # Database access 
-middleware/ # Middleware (logger, recovery) 
-models/ # Data models 
-init/ init.sql # Database initialization
+internal/
+  handlers/          # HTTP handlers
+  services/          # Business logic
+  repository/        # Database access
+  middleware/        # Middleware
+  models/            # Data models
+
+init/
+  init.sql           # Database initialization
+```
 ---
 
 ## Maintainer
