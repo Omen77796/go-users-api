@@ -1,8 +1,8 @@
 # Go Users API
 
-REST API built with Go, PostgreSQL, Redis and Docker.
+REST API built with Go, PostgreSQL, Redis and Docker, following a layered (clean) architecture.
 
-This project is a backend API that manages users and demonstrates a modern backend architecture using containers, caching and a relational database.
+This project demonstrates how to build a scalable backend with caching, proper separation of concerns, and production-ready patterns.
 
 ---
 
@@ -11,44 +11,52 @@ This project is a backend API that manages users and demonstrates a modern backe
 * Go
 * Chi Router
 * PostgreSQL
-* Redis
-* Docker
-* Docker Compose
+* Redis (caching)
+* Docker & Docker Compose
+* Swagger (API documentation)
 
 ---
 
 ## Architecture
 
-Client → Go API → Redis Cache → PostgreSQL Database
+The project follows a layered architecture:
+
+### Layers
+
+- **Handler** → HTTP layer
+- **Service** → Business logic + cache handling
+- **Repository** → Database access
+- **PostgreSQL** → Primary database
+- **Redis** → Cache layer
 
 ---
 
-## mermaid
-graph TD
+## Architecture Diagram
 
-Client --> API[Go API - Chi Router]
+graph TD 
 
-API --> Redis[(Redis Cache)]
+Client --> Handler
 
-API --> Postgres[(PostgreSQL Database)]
+subgraph Application 
+Handler --> Service 
+Service --> Repository end
+
+Repository --> Postgres[(PostgreSQL)] 
+Service --> Redis[(Redis Cache)]
 
 ---
 
 ## Environment Variables
 
-1. Copy the example file:
+Create a .env file:
 
-```bash
-cp .env.example .env
-```
-
-2. Adjust values as needed for your local setup.
-
-> `.env` is intentionally ignored by git to avoid committing secrets.
-
+DATABASE_URL=postgres://user:password@db:5432/users?sslmode=disable
+REDIS_ADDR=redis:6379
+REDIS_PASSWORD=
+PORT=8080
 ---
 
-## Run the Project
+## Run the Project with Docker
 
 Clone the repository:
 
@@ -68,24 +76,23 @@ http://localhost:8080
 
 ---
 
-## API Endpoints
+**API Documentation (Swagger)**
+http://localhost:8080/swagger/index.html
 
-Health check
+---
+## 🔌 API Endpoints
 
-GET /health
+### Health
 
-Get all users
+- **GET /health**
 
-GET /users
+### Users
 
-Get user by ID
-
-GET /users/{id}
-
-Create new user
-
-POST /users
-
+- **GET/users → Get all users**
+- **GET/users/{id} → Get user by ID**
+- **POST/users → Create a new user**
+- **DELETE/users/{id} → Delete a user**
+ 
 ---
 
 ## API Usage Examples
@@ -110,14 +117,14 @@ Request
 
 curl http://localhost:8080/users
 
-Example Response
+Example response:
 
 [
-{
-"id": 1,
-"name": "Omen77796",
-"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
-}
+  {
+    "id": 1,
+    "name": "John",
+    "email": "john@email.com"
+  }
 ]
 
 ---
@@ -128,12 +135,12 @@ Request
 
 curl http://localhost:8080/users/1
 
-Example Response
+Example response:
 
 {
-"id": 1,
-"name": "Omen77796",
-"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
+  "id": 1,
+  "name": "John",
+  "email": "john@email.com"
 }
 
 ---
@@ -142,52 +149,37 @@ Example Response
 
 Request
 
-curl -X POST http://localhost:8080/users 
--H "Content-Type: application/json" 
+curl -X POST http://localhost:8080/users \
+-H "Content-Type: application/json" \
 -d '{
-"name": "Omen77796",
-"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
+  "name": "John",
+  "email": "john@email.com"
 }'
 
-Example Response
+Example response:
 
 {
-"id": 2,
-"name": "Omen77796",
-"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
+  "id": 2,
+  "name": "John",
+  "email": "john@email.com"
 }
-
 
 ---
 
-## Example Request
-
-POST /users
-
-{
-"name": "Omen77796",
-"email": "[Omen77796@email.com](mailto:Omen77796@email.com)"
-}
-
+## Delete User
+curl -X DELETE http://localhost:8080/users/1
 ---
 
 ## Project Structure
 
-cmd/api
-Application entry point
+cmd/api     # Application entry point 
 
-internal/handlers
-HTTP handlers
-
-internal/models
-Data models
-
-internal/middleware
-Middleware logic
-
-init/init.sql
-Database initialization script
-
+internal/ handlers/ # HTTP handlers 
+services/ # Business logic 
+repository/ # Database access 
+middleware/ # Middleware (logger, recovery) 
+models/ # Data models 
+init/ init.sql # Database initialization
 ---
 
 ## Maintainer
